@@ -3,16 +3,15 @@ import axios from "axios";
 // Create axios instance with default config
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api/",
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 // Add request interceptor to include auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
-    if (token) {
+    // No agregar Authorization si estamos haciendo login
+    if (token && !config.url.includes("/auth/login")) {
+      console.log("Token:", token);
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -24,7 +23,6 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle 401 Unauthorized errors (expired token)
     if (error.response && error.response.status === 401) {
       localStorage.removeItem("token");
       window.location.href = "/login";
